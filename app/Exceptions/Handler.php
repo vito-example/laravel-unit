@@ -2,7 +2,10 @@
 
 namespace App\Exceptions;
 
+use Dotenv\Exception\ValidationException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -36,6 +39,43 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             //
+        });
+
+        // handle validation exception
+        $this->renderable(function (ValidationException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validation failed',
+                    'data' => null,
+                    'error' => $e->errors()
+                ], 422);
+            }
+        });
+
+        // handle all AuthorizationException
+        $this->renderable(function (AuthenticationException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Valid auth credentials required',
+                    'data' => null,
+                    'error' => null
+                ], 422);
+            }
+
+            return redirect()->guest('login');
+        });
+
+        $this->renderable(function (NotFoundHttpException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Not found.',
+                    'data' => null,
+                    'error' => null
+                ]);
+            }
         });
     }
 }
