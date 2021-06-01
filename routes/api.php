@@ -15,3 +15,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('job-categories', [JobCategoryController::class, 'store']);
+
+
+Route::get('/site-search',[\App\Http\Controllers\SitewideSearchController::class,'search']);
